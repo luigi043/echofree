@@ -5,8 +5,11 @@ const { preRank, diversifyPage } = require('../services/RankingEngine');
 // ── GET /posts ────────────────────────────────────────────────────────────────
 async function getPosts(req, res) {
     try {
-        const limit  = Math.min(parseInt(req.query.limit)  || 50, 100);
+        const limit  = Math.max(1, Math.min(parseInt(req.query.limit, 10) || 50, 100));
         const offset = Math.max(parseInt(req.query.offset) || 0, 0);
+        if (req.query.tags !== undefined && typeof req.query.tags !== "string") {
+            return res.status(400).json({ error: "Tags must be a comma-separated string" });
+        }
         const tags   = req.query.tags
             ? req.query.tags.split(',').map(t => t.trim().toLowerCase())
             : null;
@@ -50,13 +53,17 @@ async function getPosts(req, res) {
 // ── POST /posts ───────────────────────────────────────────────────────────────
 async function createPost(req, res) {
     try {
-        const { content, tags = [], authorName = 'Anonymous' } = req.body;
+        const { content, tags = [], authorName = 'Anonymous' } = req.body || {};
 
-        if (!content || content.trim().length === 0) {
+        if (typeof content !== "string" || content.trim().length === 0) {
             return res.status(400).json({ error: 'Content is required' });
         }
         if (content.length > 280) {
             return res.status(400).json({ error: 'Content exceeds 280 characters' });
+        }
+
+        if (!Array.isArray(tags) || tags.some(tag => typeof tag !== "string")) {
+            return res.status(400).json({ error: "Tags must be an array of strings" });
         }
 
         // Sanitise tags

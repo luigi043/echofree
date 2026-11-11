@@ -27,7 +27,7 @@ function diversityScore(tags, tagCounts) {
 
 function preRank(posts, { freshnessWeight = 0.6, diversityWeight = 0.4 } = {}) {
     const now      = Date.now();
-    const tagCounts = {};
+    const tagCounts = Object.create(null);
 
     return posts
         .map(post => {
@@ -48,7 +48,7 @@ function preRank(posts, { freshnessWeight = 0.6, diversityWeight = 0.4 } = {}) {
 }
 
 function diversifyPage(posts, pageSize, maxPerTag = 5) {
-    const tagCounts = {};
+    const tagCounts = Object.create(null);
     const page      = [];
 
     for (const post of posts) {

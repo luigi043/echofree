@@ -46,7 +46,8 @@ const PostSchema = new mongoose.Schema({
     timestamps: true,   // createdAt + updatedAt managed by Mongoose
     toJSON: {
         transform(_, ret) {
-            ret.id = ret._id;
+            ret.id = ret._id.toString();
+            if (ret.createdAt) ret.createdAt = ret.createdAt.getTime();
             // Strip internal fields before sending to clients
             delete ret._id;
             delete ret.__v;

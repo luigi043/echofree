@@ -66,13 +66,14 @@ describe('preRank', () => {
 
 // ── diversifyPage ─────────────────────────────────────────────────────────────
 describe('diversifyPage', () => {
-    test('caps posts per tag to maxPerTag', () => {
+    test('caps posts per tag when alternatives fill the page', () => {
         const posts = Array.from({ length: 20 }, (_, i) =>
-            makePost({ id: String(i), tags: ['tech'] })
+            makePost({ id: String(i), tags: [i < 15 ? 'tech' : 'art'] })
         );
         const page = diversifyPage(posts, 10, 5);
         const techCount = page.filter(p => p.tags.includes('tech')).length;
-        expect(techCount).toBeLessThanOrEqual(5);
+        expect(page).toHaveLength(10);
+        expect(techCount).toBe(5);
     });
 
     test('backfills to reach page size even if all tags saturated', () => {
