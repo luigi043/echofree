@@ -9,6 +9,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.button.MaterialButton
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.echofree.R
@@ -47,7 +48,19 @@ class FeedFragment : Fragment() {
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = adapter
 
+        val retry = view.findViewById<MaterialButton>(R.id.btn_retry)
+        retry.setOnClickListener { viewModel.refresh() }
+        swipeRefresh.setOnChildScrollUpCallback { _, _ -> recyclerView.canScrollVertically(-1) }
         swipeRefresh.setOnRefreshListener { viewModel.refresh() }
+
+        val result = findNavController().currentBackStackEntry?.savedStateHandle
+        result?.getLiveData<Boolean>("post_published")?.observe(viewLifecycleOwner) { published ->
+            if (published) {
+                result.set("post_published", false)
+                viewModel.refresh()
+                Snackbar.make(view, R.string.post_published, Snackbar.LENGTH_SHORT).show()
+            }
+        }
 
         chipFeed.setOnClickListener { viewModel.setExploreMode(false) }
         chipExplore.setOnClickListener { viewModel.setExploreMode(true) }
@@ -58,23 +71,25 @@ class FeedFragment : Fragment() {
         }
 
         viewModel.uiState.observe(viewLifecycleOwner) { state ->
-            swipeRefresh.isRefreshing = false
+            swipeRefresh.isRefreshing = state == FeedUiState.Loading
+            retry.visibility = if (state == FeedUiState.Error) View.VISIBLE else View.GONE
             when (state) {
-                is FeedUiState.Loading -> swipeRefresh.isRefreshing = true
+                is FeedUiState.Loading -> emptyView.visibility = View.GONE
                 is FeedUiState.Success -> {
                     emptyView.visibility = View.GONE
                     recyclerView.visibility = View.VISIBLE
                     adapter.submitList(state.posts)
                 }
                 is FeedUiState.Empty -> {
+                    adapter.submitList(emptyList())
                     recyclerView.visibility = View.GONE
                     emptyView.visibility = View.VISIBLE
-                    emptyView.text = "No posts yet — be the first to share something."
+                    emptyView.setText(R.string.feed_empty)
                 }
                 is FeedUiState.Error -> {
-                    Snackbar.make(view, state.message, Snackbar.LENGTH_LONG)
-                        .setAction("Retry") { viewModel.refresh() }
-                        .show()
+                    emptyView.setText(R.string.feed_error)
+                    emptyView.visibility = View.VISIBLE
+                    recyclerView.visibility = View.GONE
                 }
             }
         }
@@ -120,7 +135,7 @@ class PostAdapter : RecyclerView.Adapter<PostAdapter.PostViewHolder>() {
             tvTime.text    = formatRelativeTime(post.createdAt)
 
             chipGroup.removeAllViews()
-            post.tags.take(4).forEach { tag ->
+            post.tags.forEach { tag ->
                 val chip = Chip(itemView.context).apply {
                     text = "#$tag"
                     isClickable = false

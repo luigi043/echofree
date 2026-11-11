@@ -8,12 +8,13 @@ import com.echofree.data.models.Post
 import com.echofree.data.repository.PostRepository
 import com.echofree.network.ApiService
 import com.echofree.util.FeedRanker
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 sealed class FeedUiState {
     object Loading : FeedUiState()
     data class Success(val posts: List<Post>) : FeedUiState()
-    data class Error(val message: String) : FeedUiState()
+    object Error : FeedUiState()
     object Empty : FeedUiState()
 }
 
@@ -30,13 +31,16 @@ class FeedViewModel : ViewModel() {
     var rankConfig = FeedRanker.RankConfig()
         private set
 
+    private var loadJob: Job? = null
+
     init {
         loadFeed()
     }
 
     fun loadFeed(forceRefresh: Boolean = false) {
+        loadJob?.cancel()
         _uiState.value = FeedUiState.Loading
-        viewModelScope.launch {
+        loadJob = viewModelScope.launch {
             val result = repository.getFeed(
                 forceRefresh = forceRefresh,
                 exploreMode = _isExploreMode.value ?: false,
@@ -47,11 +51,7 @@ class FeedViewModel : ViewModel() {
                     _uiState.value = if (posts.isEmpty()) FeedUiState.Empty
                                      else FeedUiState.Success(posts)
                 },
-                onFailure = { e ->
-                    _uiState.value = FeedUiState.Error(
-                        e.message ?: "Something went wrong"
-                    )
-                }
+                onFailure = { _uiState.value = FeedUiState.Error }
             )
         }
     }

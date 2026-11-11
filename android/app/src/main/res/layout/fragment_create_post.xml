@@ -10,8 +10,9 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        app:title="New post"
-        app:navigationIcon="@drawable/ic_close"/>
+        app:title="@string/new_post"
+        app:navigationIcon="@drawable/ic_close"
+        app:navigationContentDescription="@string/close_composer"/>
 
     <ScrollView
         android:layout_width="match_parent"
@@ -29,7 +30,7 @@
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Your name (optional)"
+                android:hint="@string/author_hint"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_marginBottom="16dp">
 
@@ -46,7 +47,7 @@
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="What's on your mind?"
+                android:hint="@string/content_hint"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_marginBottom="8dp">
 
@@ -68,7 +69,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="end"
                 android:layout_marginBottom="20dp"
-                android:text="0 / 280"
+                android:text="@string/initial_character_count"
                 android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
                 android:textColor="?attr/colorOnSurfaceVariant"/>
 
@@ -76,8 +77,8 @@
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Tags (comma-separated, max 5)"
-                app:helperText="e.g. philosophy, tech, writing"
+                android:hint="@string/tags_hint"
+                app:helperText="@string/tags_help"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_marginBottom="28dp">
 
@@ -90,21 +91,21 @@
                     android:maxLines="1"/>
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- No image upload, no location, no mood — intentional -->
             <TextView
+                android:id="@+id/publish_error"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="28dp"
-                android:text="No images, no metrics. Just words."
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
-                android:textColor="?attr/colorOnSurfaceVariant"
-                android:gravity="center"/>
+                android:accessibilityLiveRegion="polite"
+                android:layout_marginBottom="12dp"
+                android:text="@string/publish_error"
+                android:textColor="?attr/colorError"
+                android:visibility="gone"/>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_post"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Post"
+                android:text="@string/publish"
                 android:enabled="false"
                 style="@style/Widget.MaterialComponents.Button"/>
 

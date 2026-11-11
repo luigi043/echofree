@@ -3,7 +3,9 @@ package com.echofree
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.fragment.NavHostFragment
-import androidx.navigation.ui.AppBarConfiguration
+import android.view.View
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
@@ -21,11 +23,18 @@ class MainActivity : AppCompatActivity() {
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         val navController = navHostFragment.navController
 
-        val appBarConfiguration = AppBarConfiguration(
-            setOf(R.id.feedFragment)
-        )
+        val bottomNav = findViewById<BottomNavigationView>(R.id.bottom_nav)
+        bottomNav.setupWithNavController(navController)
+        navController.addOnDestinationChangedListener { _, destination, _ ->
+            bottomNav.visibility = if (destination.id == R.id.feedFragment) View.VISIBLE else View.GONE
+        }
 
-        findViewById<BottomNavigationView>(R.id.bottom_nav)
-            ?.setupWithNavController(navController)
+        val root = findViewById<View>(R.id.root)
+        ViewCompat.setOnApplyWindowInsetsListener(root) { view, insets ->
+            val safeArea = insets.getInsets(WindowInsetsCompat.Type.systemBars() or
+                WindowInsetsCompat.Type.displayCutout() or WindowInsetsCompat.Type.ime())
+            view.setPadding(safeArea.left, safeArea.top, safeArea.right, safeArea.bottom)
+            WindowInsetsCompat.CONSUMED
+        }
     }
 }

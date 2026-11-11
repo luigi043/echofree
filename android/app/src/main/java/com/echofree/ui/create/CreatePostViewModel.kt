@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 sealed class CreateState {
     object Loading : CreateState()
     object Success : CreateState()
-    data class Error(val message: String) : CreateState()
+    object Error : CreateState()
 }
 
 class CreatePostViewModel : ViewModel() {
@@ -23,6 +23,7 @@ class CreatePostViewModel : ViewModel() {
     val createState: LiveData<CreateState?> = _createState
 
     fun createPost(content: String, tags: List<String>, authorName: String) {
+        if (_createState.value == CreateState.Loading) return
         _createState.value = CreateState.Loading
         viewModelScope.launch {
             val result = repository.createPost(
@@ -30,7 +31,7 @@ class CreatePostViewModel : ViewModel() {
             )
             _createState.value = result.fold(
                 onSuccess = { CreateState.Success },
-                onFailure = { CreateState.Error(it.message ?: "Failed to post") }
+                onFailure = { CreateState.Error }
             )
         }
     }

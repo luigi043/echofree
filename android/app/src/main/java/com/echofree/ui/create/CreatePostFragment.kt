@@ -6,11 +6,12 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.TextView
+import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButton
-import com.google.android.material.snackbar.Snackbar
 import com.echofree.R
 
 /**
@@ -49,19 +50,20 @@ class CreatePostFragment : Fragment() {
         tvCharCount = view.findViewById(R.id.tv_char_count)
         btnPost     = view.findViewById(R.id.btn_post)
 
-        etContent.addTextChangedListener(object : android.text.TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-            override fun afterTextChanged(s: android.text.Editable?) {
-                val len = s?.length ?: 0
-                tvCharCount.text = "$len / $maxChars"
-                tvCharCount.setTextColor(
-                    if (len > maxChars) requireContext().getColor(R.color.error)
-                    else requireContext().getColor(R.color.on_surface_variant)
-                )
-                btnPost.isEnabled = len in 1..maxChars
-            }
-        })
+        view.findViewById<MaterialToolbar>(R.id.toolbar).setNavigationOnClickListener {
+            findNavController().navigateUp()
+        }
+        fun updateControls() {
+            val text = etContent.text.toString()
+            val busy = viewModel.createState.value == CreateState.Loading
+            tvCharCount.text = getString(R.string.character_count, text.length, maxChars)
+            btnPost.isEnabled = !busy && text.isNotBlank() && text.length <= maxChars
+            btnPost.setText(if (busy) R.string.publishing else R.string.publish)
+            etContent.isEnabled = !busy
+            etTags.isEnabled = !busy
+            etAuthor.isEnabled = !busy
+        }
+        etContent.doAfterTextChanged { updateControls() }
 
         btnPost.setOnClickListener {
             val content = etContent.text.toString().trim()
@@ -69,21 +71,24 @@ class CreatePostFragment : Fragment() {
                 .split(",")
                 .map { it.trim().lowercase() }
                 .filter { it.isNotEmpty() }
+                .distinct()
                 .take(5)    // cap tags to prevent spam
             val author  = etAuthor.text.toString().trim().ifEmpty { "Anonymous" }
 
             viewModel.createPost(content, tags, author)
         }
 
+        val publishError = view.findViewById<TextView>(R.id.publish_error)
         viewModel.createState.observe(viewLifecycleOwner) { state ->
+            publishError.visibility = if (state == CreateState.Error) View.VISIBLE else View.GONE
+            updateControls()
             when (state) {
-                is CreateState.Loading -> btnPost.isEnabled = false
-                is CreateState.Success -> findNavController().navigateUp()
-                is CreateState.Error   -> {
-                    btnPost.isEnabled = true
-                    Snackbar.make(view, state.message, Snackbar.LENGTH_LONG).show()
+                CreateState.Success -> {
+                    val nav = findNavController()
+                    nav.previousBackStackEntry?.savedStateHandle?.set("post_published", true)
+                    nav.navigateUp()
                 }
-                null -> {}
+                else -> Unit
             }
         }
     }
