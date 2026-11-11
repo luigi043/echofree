@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Try EchoFree, a text-first social feed ranked by freshness, topic variety, and chance.">
+  <title>EchoFree | Interactive demo</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <main class="stage">
+    <section class="intro" aria-labelledby="intro-title">
+      <p class="eyebrow">INTERACTIVE DEMO</p>
+      <h1 id="intro-title">EchoFree</h1>
+      <p class="lead">A social feed for ideas without like or follower counts.</p>
+      <p>Read a mix of fresh posts, switch to Explore for a shuffle, or publish a short post of your own.</p>
+      <p class="demo-note">Sample posts and publishing are simulated. Changes stay in this tab and reset on reload.</p>
+    </section>
+    <section class="phone" aria-label="EchoFree app preview">
+      <div class="camera" aria-hidden="true"></div>
+      <div class="screen">
+        <header class="app-header">
+          <span class="wordmark">EchoFree</span>
+          <button id="refresh" type="button">Refresh</button>
+        </header>
+        <p class="mobile-note">Interactive demo · Posts stay in this tab</p>
+        <section id="feed-view" class="view" aria-label="Posts">
+          <div class="tabs" role="group" aria-label="Feed mode">
+            <button type="button" id="feed" aria-pressed="true">Feed</button>
+            <button type="button" id="explore" aria-pressed="false">Explore</button>
+          </div>
+          <div id="posts" class="posts" aria-label="Posts"></div>
+          <button id="write" class="primary write" type="button">Write a post</button>
+        </section>
+        <section id="compose-view" class="view composer" hidden aria-labelledby="compose-title">
+          <div class="compose-header">
+            <button id="close" type="button">Close</button>
+            <h2 id="compose-title" tabindex="-1">New post</h2>
+          </div>
+          <form id="compose">
+            <label>Display name (optional)<input id="author" maxlength="50" autocomplete="off"></label>
+            <label>Post text<textarea id="content" rows="5" maxlength="280" required></textarea></label>
+            <output id="count" for="content">0 / 280</output>
+            <label>Tags (optional)<input id="tags" aria-describedby="tag-help" autocomplete="off"></label>
+            <p id="tag-help">Separate up to 5 tags with commas.</p>
+            <button id="publish" class="primary" type="submit" disabled>Publish</button>
+          </form>
+        </section>
+        <p id="status" role="status" aria-live="polite"></p>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
