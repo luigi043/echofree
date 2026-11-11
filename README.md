@@ -1,151 +1,49 @@
 # EchoFree
 
-> A social feed without followers, likes, or popularity signals.
+EchoFree is a text-first social feed. Readers can browse short posts without like or follower counts, switch to Explore for a randomized order, and publish up to 280 characters with an optional display name and up to five tags. It is a prototype for readers and writers who want discovery without popularity metrics.
 
-EchoFree is an Android app that challenges the assumption that engagement metrics make social feeds better. Instead, the feed algorithm surfaces content through **freshness**, **tag diversity**, and **controlled randomness** — no echo chambers, no popularity spirals.
+## Run on Android
 
----
+Use Android Studio, JDK 17 and Android SDK Platform 35. Open the `android` folder, let Gradle sync, and select an Android emulator with API 26 or later. The debug app connects to `http://10.0.2.2:3000/`, the emulator address for the host machine. Start one of the two backends below before opening the app.
 
-## Architecture
+For a disposable local walkthrough, run this from the repository root with Node.js:
 
-```
-Android (Kotlin + MVVM)
-  └── PostRepository ──HTTP──▶ Node.js REST API
-                                 ├── RankingEngine (pre-rank)
-                                 └── MongoDB (posts collection)
-
-Client finalises ranking with per-device randomness → every user sees a different order.
+```sh
+node scripts/fixture-api.mjs
 ```
 
----
+The fixture listens on host loopback. It starts with synthetic posts and stores new posts in memory until it stops.
 
-## Ranking Algorithm
+For persistent posts, start a local MongoDB instance and configure the real API:
 
-The feed is produced in two stages:
-
-### Stage 1 — Server (RankingEngine.js)
-| Signal | Weight | Formula |
-|--------|--------|---------|
-| Freshness | 60% | `e^(-λt)` — exponential decay, half-life 12h |
-| Tag diversity | 40% | Penalty if a tag already has ≥ 4 posts in the result set |
-
-The server returns posts in a pre-ranked order but does **not** inject randomness — that happens client-side so each device gets variety.
-
-### Stage 2 — Client (FeedRanker.kt)
-| Signal | Weight (default) |
-|--------|-----------------|
-| Freshness | 45% |
-| Tag diversity | 25% |
-| Random noise | 30% |
-
-The random component is seeded fresh on every pull-to-refresh, so the same posts produce a different feed order each time.
-
-### Wildcard Injection
-Every 6th post in the final feed is replaced by a "wildcard" — a post whose primary tag is the least-seen tag in the current feed. This guarantees exposure to unfamiliar topics even in a small corpus.
-
-### Explore Mode
-Toggling Explore zeroes out freshness and diversity signals, leaving only random noise. The result is a fully shuffled feed — useful for discovery when the user is browsing without intent.
-
----
-
-## Project Structure
-
-```
-echofree/
-├── android/
-│   └── app/src/main/java/com/echofree/
-│       ├── data/
-│       │   ├── models/Post.kt
-│       │   └── repository/PostRepository.kt
-│       ├── ui/
-│       │   ├── feed/
-│       │   │   ├── FeedFragment.kt
-│       │   │   └── FeedViewModel.kt
-│       │   └── create/
-│       │       ├── CreatePostFragment.kt
-│       │       └── CreatePostViewModel.kt
-│       ├── network/ApiService.kt
-│       └── util/FeedRanker.kt          ← core algorithm
-└── backend/
-    ├── server.js
-    ├── src/
-    │   ├── models/Post.js
-    │   ├── services/RankingEngine.js   ← core algorithm
-    │   ├── controllers/PostController.js
-    │   └── routes/posts.js
-    └── src/__tests__/RankingEngine.test.js
-```
-
----
-
-## Getting Started
-
-### Backend
-
-```bash
+```sh
 cd backend
-cp .env.example .env
-npm install
-npm run dev          # requires MongoDB running locally
-npm test             # run unit tests
+npm ci
 ```
 
-### Android
+Copy `.env.example` to `.env`, set `MONGO_URI` for your local database, and run `npm start`. Use port 3000 with the default emulator configuration. The API does not implement accounts, authentication, moderation, or offline delivery. Keep it in a local development environment.
 
-1. Open `android/` in Android Studio (Hedgehog or later).
-2. In `ApiService.kt`, set `BASE_URL` to your backend's address.
-   - Emulator default: `http://10.0.2.2:3000/`
-   - Physical device: use your machine's LAN IP.
-3. Add dependencies to `build.gradle.kts`:
-   ```kotlin
-   implementation("com.squareup.retrofit2:retrofit:2.11.0")
-   implementation("com.squareup.retrofit2:converter-gson:2.11.0")
-   implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
-   implementation("com.google.android.material:material:1.12.0")
-   ```
-4. Run on emulator or device.
+On Windows, build the debug APK and run Android unit tests with:
 
----
+```powershell
+cd android
+./gradlew.bat assembleDebug testDebugUnitTest
+```
 
-## API
+Use `./gradlew` with the same tasks on macOS or Linux. The output is `android/app/build/outputs/apk/debug/app-debug.apk` from the repository root. The checked-in debug APK and emulator evidence are described in the [native screen index](docs/verification/SCREEN-INDEX.md).
 
-| Endpoint | Method | Params | Response |
-|----------|--------|--------|----------|
-| `/posts` | GET | `limit`, `offset`, `tags` | `{ posts: Post[], total: number }` |
-| `/posts` | POST | `{ content, tags, authorName }` | `Post` |
-| `/health` | GET | — | `{ status: "ok" }` |
+## Browser demo
 
----
+Open the [phone view](https://echofree-android-demo.vercel.app/?view=phone) to present the app by itself, or use the [portfolio view](https://echofree-android-demo.vercel.app/) for context. Both support Feed, Explore, Refresh and Publish. The preview uses synthetic data and simulated publishing. Posts added there are local to the open tab and reset on reload.
 
-## What's intentionally missing
+## API and ranking
 
-| Feature | Why it's absent |
-|---------|-----------------|
-| Like counts | Amplify existing popularity; create anxiety |
-| Follower counts | Reduce content to a vanity number |
-| Share/view counts | Surface viral content regardless of quality |
-| Trending topics | Concentrates attention on a narrow slice |
-| Chronological "following" feed | Requires followers — eliminated by design |
+| Method | Path | Request | Response |
+| --- | --- | --- | --- |
+| GET | `/health` | None | `{ status: "ok" }` |
+| GET | `/posts` | Optional `limit`, `offset` and comma-separated `tags` | `{ posts, total }` |
+| POST | `/posts` | `{ content, tags, authorName }` | Created post, HTTP 201 |
 
----
+Both post responses use epoch milliseconds for `createdAt`. The server ranks a recent candidate pool using freshness and topic diversity. It prefers a cap per topic and backfills when there are too few alternatives. Android reranks the returned posts with 45% freshness, 25% topic diversity and 30% random noise by default. Explore uses random ordering within the posts the API returned. The Android app loads up to 80 posts and can pull to refresh.
 
-## Tuning the algorithm
-
-Both `RankConfig` (Kotlin) and `preRank` options (JS) accept weight overrides. A few starting points:
-
-| Goal | freshnessWeight | diversityWeight | noiseWeight |
-|------|----------------|----------------|-------------|
-| Fast-moving news-style | 0.65 | 0.20 | 0.15 |
-| Balanced default | 0.45 | 0.25 | 0.30 |
-| Max randomness / Explore | 0.10 | 0.10 | 0.80 |
-| Evergreen content focus | 0.20 | 0.40 | 0.40 |
-
----
-
-## Roadmap
-
-- [ ] Room database for offline-first persistence
-- [ ] On-device tag interest model (no server tracking)
-- [ ] Push notifications for new content in interested tags
-- [ ] Image posts
-- [ ] Configurable half-life per tag category
+Run the backend ranking and controller tests with `npm test` from `backend`. See [verification](docs/verification/SCREEN-INDEX.md) for the native steps and test limits.
