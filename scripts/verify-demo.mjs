@@ -7,7 +7,8 @@ import { setTimeout as delay } from "node:timers/promises";
 
 const browser = process.env.ECHOFREE_BROWSER ||
   "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe";
-const url = process.argv[2] || new URL("../demo/index.html", import.meta.url).href;
+const url = new URL(process.argv[2] || new URL("../demo/index.html", import.meta.url));
+const phoneOnly = url.searchParams.get('view') === 'phone';
 const profile = await mkdtemp(join(tmpdir(), "echofree-preview-"));
 const processHandle = spawn(browser, [
   "--headless=new", "--disable-gpu", "--no-first-run", "--remote-debugging-port=0",
@@ -69,7 +70,7 @@ try {
         }
       });
     });
-    await send('Page.navigate', { url });
+    await send('Page.navigate', { url: url.href });
     await Promise.race([loaded, delay(8000, undefined, { ref: false })]);
     assert.equal(await evaluate('document.querySelectorAll("article").length'), 6);
     const layout = await evaluate(`(() => {
@@ -81,6 +82,7 @@ try {
       };
     })()`);
     assert.equal(layout.frame > 0, !mobile);
+    assert.equal(await evaluate("getComputedStyle(document.querySelector('.intro')).display === 'none'"), mobile || phoneOnly);
     assert.ok(layout.page <= width, 'Page fits viewport');
     if (mobile) assert.equal(layout.width, width, 'Phone fills mobile viewport');
 

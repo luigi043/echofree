@@ -34,6 +34,18 @@ button:disabled { opacity: .52; cursor: default; }
   gap: clamp(2rem, 7vw, 6rem);
 }
 .intro p { max-width: 39ch; line-height: 1.6; }
+.phone-only .stage {
+  grid-template-columns: minmax(320px, 410px);
+  justify-content: center;
+}
+.phone-only .intro { display: none; }
+.phone-only .mobile-note {
+  display: block;
+  margin: 0;
+  padding: 0 1rem .55rem;
+  font-size: .8rem;
+  color: #594e67;
+}
 .intro .eyebrow { font-size: .78rem; color: var(--accent); letter-spacing: .15em; font-weight: 750; }
 h1 { font-size: clamp(3rem, 7.8vw, 6rem); line-height: 1; margin: .3em 0; letter-spacing: -.07em; }
 .lead { font-size: clamp(1.15rem, 2vw, 1.55rem); font-weight: 600; }

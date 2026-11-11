@@ -1,5 +1,9 @@
 'use strict';
 
+if (new URLSearchParams(location.search).get('view') === 'phone') {
+  document.body.classList.add('phone-only');
+}
+
 const now = Date.now();
 const sample = [
   ['Mira Chen', 'I took the long way home and found a shelf of books to borrow at the bus stop. What small things make your neighbourhood feel like yours?', ['neighbourhood', 'books']],
