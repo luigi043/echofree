@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">EchoFree</string>
+    <string name="feed">Feed</string>
+    <string name="explore">Explore</string>
+    <string name="new_post">New post</string>
+    <string name="write_post">Write a post</string>
+    <string name="close_composer">Close composer</string>
+    <string name="author_hint">Display name (optional)</string>
+    <string name="content_hint">Post text</string>
+    <string name="tags_hint">Tags (optional)</string>
+    <string name="tags_help">Separate up to 5 tags with commas, for example: writing, tech.</string>
+    <string name="publish">Publish</string>
+    <string name="publishing">Publishing…</string>
+    <string name="character_count">%1$d / %2$d</string>
+    <string name="initial_character_count">0 / 280</string>
+    <string name="post_published">Post published</string>
+    <string name="publish_error">Could not confirm publication. Your text is still here.</string>
+    <string name="feed_empty">No posts yet. Write the first one.</string>
+    <string name="feed_error">Could not load posts. Check the connection and try again.</string>
+    <string name="retry">Try again</string>
+</resources>

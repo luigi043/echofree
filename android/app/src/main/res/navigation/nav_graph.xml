@@ -8,20 +8,16 @@
     <fragment
         android:id="@+id/feedFragment"
         android:name="com.echofree.ui.feed.FeedFragment"
-        android:label="Feed">
+        android:label="@string/feed">
 
         <action
             android:id="@+id/action_feed_to_create"
-            app:destination="@id/createPostFragment"
-            app:enterAnim="@anim/slide_in_up"
-            app:exitAnim="@anim/fade_out"
-            app:popEnterAnim="@anim/fade_in"
-            app:popExitAnim="@anim/slide_out_down"/>
+            app:destination="@id/createPostFragment"/>
     </fragment>
 
     <fragment
         android:id="@+id/createPostFragment"
         android:name="com.echofree.ui.create.CreatePostFragment"
-        android:label="New post"/>
+        android:label="@string/new_post"/>
 
 </navigation>
